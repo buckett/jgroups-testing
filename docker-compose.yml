@@ -1,0 +1,39 @@
+# We don't upgrade to version 3 as it doesn't support extends (yet?)
+# https://github.com/moby/moby/issues/31101
+version: '3.3'
+services:
+  app:
+     # If you want to test the production image swap the previous line with this one.
+    build: .
+
+    command: java -Djmx.service.url=service.jmx.jmxmp://localhost:9875 -Djmx.remote.server.address.wildcard=true -Djgroups.jdbc.ping.url=jdbc:mysql://db:3306/jgroups -Djgroups.jdbc.ping.user=jgroups -Djgroups.jdbc.ping.pass=jgroups -Djgroups.jdbc.ping.driver=com.mysql.jdbc.Driver -jar app.jar jgroups-config.xml
+    expose:
+     - "7800"
+     - "7801"
+
+    # Not too sure about this as there seem to be IO errors with using volumes like
+    # this, eg corrupt files and missing files.
+    # We use the sakai.properties from the production build
+    # This is needed to allow jmap (heap dumps_) to work, otherwise it fails
+    volumes:
+      - ./jgroups-config.xml:/opt/app/jgroups-config.xml
+    security_opt:
+    - seccomp:unconfined
+    links:
+     - db
+
+  db:
+    image: mysql:5.6.27
+    environment:
+      MYSQL_ROOT_PASSWORD: 
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      MYSQL_USER: jgroups
+      MYSQL_PASSWORD: jgroups
+      MYSQL_DATABASE: jgroups
+    command:
+     - --character-set-server=utf8
+    ports:
+     - "3306:3306"
+    volumes:
+      - ./jgroups.sql:/docker-entrypoint-initdb.d/jgroups.sql
+
