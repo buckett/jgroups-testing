@@ -7,6 +7,14 @@ database for node discovery as we don't have multicast working across the 2
 datacentres and all the nodes need a working database to function so it's
 not really a limit to availability.
 
+Building
+--------
+
+Before running you need build the Java project. This will create the jGroups
+test app that is bundled into the docker image.
+
+    mvn install
+
 Running
 -------
 
